@@ -63,10 +63,15 @@ final class UXCodeTextView: UXTextView {
   
   init() {
     let textStorage = highlightr.flatMap {
-                        CodeAttributedString(highlightr: $0)
+                        let storage = CodeAttributedString(highlightr: $0)
+												
+											storage.highlightDelegate = CustomHighglightDelegate(textStorage: storage)
+			
+												return storage
                       }
                    ?? NSTextStorage()
-    
+	  
+	  
     let layoutManager = NSLayoutManager()
     textStorage.addLayoutManager(layoutManager)
     
@@ -88,7 +93,7 @@ final class UXCodeTextView: UXTextView {
       isAutomaticLinkDetectionEnabled      = false
       isAutomaticDashSubstitutionEnabled   = false
       isAutomaticQuoteSubstitutionEnabled  = false
-      usesRuler                            = false
+      usesRuler                            = true
     #endif
   }
   required init?(coder: NSCoder) {
@@ -152,7 +157,7 @@ final class UXCodeTextView: UXTextView {
   #if os(iOS)
     override func insertText(_ text: String) {
         super.insertText(text)
-        guard isAutoPairEnabled              else { return }       
+        guard isAutoPairEnabled              else { return }
         guard let end = autoPairCompletion[text] else { return }
         let prev = self.selectedRange
         super.insertText(end)

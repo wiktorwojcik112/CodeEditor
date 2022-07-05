@@ -116,6 +116,19 @@ struct UXCodeTextViewRepresentable : UXViewRepresentable {
     #else
       #error("Unsupported OS")
     #endif
+    
+    private func highlightCurrentLine(textView: UXTextView) {
+      let cursorLocation = textView.selectedRanges.first?.rangeValue.location ?? 1
+      
+      var line = NSRange(location: 0, length: 0)
+      
+      textView.layoutManager?.lineFragmentRect(forGlyphAt: cursorLocation, effectiveRange: &line)
+      
+      let highlightColor = NSColor.systemBlue.withAlphaComponent(0.1)
+      
+      textView.textStorage?.addAttribute(.backgroundColor, value: NSColor.clear, range: NSRange(location: 0, length: textView.string.count))
+      textView.textStorage?.addAttribute(.backgroundColor, value: highlightColor, range: line)
+    }
       
     private func textViewDidChange(textView: UXTextView) {
       // This function may be called as a consequence of updating the text string
@@ -157,6 +170,9 @@ struct UXCodeTextViewRepresentable : UXViewRepresentable {
         return
       }
       
+      highlightCurrentLine(textView: textView)
+      
+      
       guard let selection = parent.selection else {
         return
       }
@@ -173,7 +189,7 @@ struct UXCodeTextViewRepresentable : UXViewRepresentable {
           || parent.flags.contains(.editable)
     }
   }
-    
+  
   public func makeCoordinator() -> Coordinator {
     return Coordinator(self)
   }
@@ -241,6 +257,9 @@ struct UXCodeTextViewRepresentable : UXViewRepresentable {
       let scrollView = NSScrollView()
       scrollView.hasVerticalScroller = true
       scrollView.documentView = textView
+      scrollView.rulersVisible = true
+      scrollView.hasVerticalRuler = true
+      scrollView.verticalRulerView = LineNumberRulerView(textView: textView)
       
       updateTextView(textView)
       return scrollView
